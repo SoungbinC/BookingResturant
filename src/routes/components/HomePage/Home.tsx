@@ -1,52 +1,39 @@
 // src/pages/Home.tsx
-import {
-    Box,
-    Grid,
-    Heading,
-    Stack,
-    Text,
-    useBreakpointValue,
-} from "@chakra-ui/react"
+import { Box, Heading, Stack, Text } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { getRestaurants } from "@/api/restauratnsApi"
 import RestaurantSearchBar from "./RestaurantSearchBar"
-
-const mockRestaurants = [
-    { id: 1, name: "Sushi Paradise", cuisine: "Japanese" },
-    { id: 2, name: "Pizza Central", cuisine: "Italian" },
-    { id: 3, name: "Curry Kingdom", cuisine: "Indian" },
-    { id: 4, name: "Burger Barn", cuisine: "American" },
-    { id: 5, name: "Taco Time", cuisine: "Mexican" },
-]
-
+import RestaurantsHome from "./RestaurantsHome"
+import RestaurantsHomeSkeleton from "./RestaurantsHomeSkeleton"
 export default function Home() {
-    const columns = useBreakpointValue({ base: 1, sm: 2, md: 3 })
+    const {
+        data: restaurants,
+        isLoading,
+        isError,
+    } = useQuery({
+        queryKey: ["restaurants"],
+        queryFn: getRestaurants,
+        staleTime: 1000 * 60 * 5,
+    })
 
     return (
         <Box px={6} py={10}>
             <Stack align="center" gap={6} mb={10}>
-                <Heading size="lg">Find a Restaurant</Heading>
+                <Heading size="lg">Restaurants</Heading>
                 <RestaurantSearchBar />
             </Stack>
 
-            <Grid templateColumns={`repeat(${columns}, 1fr)`} gap={6}>
-                {mockRestaurants.map((r) => (
-                    <Box
-                        key={r.id}
-                        p={5}
-                        borderWidth="1px"
-                        borderRadius="xl"
-                        shadow="md"
-                        _hover={{ shadow: "lg", transform: "scale(1.02)" }}
-                        transition="all 0.2s"
-                    >
-                        <Heading size="md" mb={2}>
-                            {r.name}
-                        </Heading>
-                        <Text fontSize="sm" color="gray.500">
-                            {r.cuisine}
-                        </Text>
-                    </Box>
-                ))}
-            </Grid>
+            {isError && (
+                <Text color="red.500" textAlign="center">
+                    Failed to load restaurants. Please try again later.
+                </Text>
+            )}
+
+            {isLoading ? (
+                <RestaurantsHomeSkeleton />
+            ) : (
+                <RestaurantsHome restaurants={restaurants} />
+            )}
         </Box>
     )
 }

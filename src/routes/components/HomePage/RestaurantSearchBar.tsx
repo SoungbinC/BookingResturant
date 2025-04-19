@@ -15,7 +15,7 @@ export default function RestaurantSearchBar() {
     }
 
     return (
-        <Box as="form" onSubmit={handleSubmit(onSubmit)} width="100%" maxW="sm">
+        <Box as="form" onSubmit={handleSubmit(onSubmit)} width="100%" maxW="m">
             <InputGroup
                 startElement={<LuSearch color="gray" />}
                 endElement={<Kbd bg="transparent">⌘K</Kbd>}
