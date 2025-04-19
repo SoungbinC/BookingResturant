@@ -42,6 +42,27 @@ def get_all_restaurants(db: Session = Depends(get_db)):
 
 
 # -----------------------------------------------
+# 📋 Get Restaurant by ID
+# -----------------------------------------------
+@router.get("/{restaurant_id}", response_model=RestaurantRead)
+def get_restaurant_by_id(restaurant_id: int, db: Session = Depends(get_db)):
+    try:
+        # Fetch the restaurant by ID from the database
+        restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+
+        # If no restaurant is found, raise a 404 error
+        if not restaurant:
+            raise HTTPException(status_code=404, detail="Restaurant not found")
+
+        # Return the restaurant serialized using the RestaurantRead schema
+        return RestaurantRead.from_orm(restaurant)
+
+    except Exception as e:
+        print("Error retrieving restaurant by ID:", e)
+        raise HTTPException(status_code=500, detail="Failed to fetch restaurant")
+
+
+# -----------------------------------------------
 # 🔍 Restaurant Search with Availability
 # -----------------------------------------------
 @router.get("/search", response_model=List[RestaurantRead])
