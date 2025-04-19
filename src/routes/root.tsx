@@ -3,8 +3,8 @@ import { Link, Outlet } from "react-router-dom"
 import { useState } from "react"
 import { MdDinnerDining } from "react-icons/md"
 
-import LoginDialog from "./components/LoginDialog"
-import SignupDialog from "./components/SignUpDialog"
+import LoginDialog from "./components/auth_components/LoginDialog"
+import SignupDialog from "./components/auth_components/SignUpDialog"
 
 export default function Root() {
     const [isLoginOpen, setLoginOpen] = useState(false)
