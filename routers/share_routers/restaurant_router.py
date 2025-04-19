@@ -25,6 +25,23 @@ router = APIRouter(prefix="/restaurants", tags=["Shared/ Restaurants API"])
 
 
 # -----------------------------------------------
+# 📋 Show All Restaurants
+# -----------------------------------------------
+@router.get("/", response_model=List[RestaurantRead])
+def get_all_restaurants(db: Session = Depends(get_db)):
+    try:
+        # Retrieve all restaurants from the database
+        restaurants = db.query(Restaurant).all()
+
+        # Return a list of restaurants serialized using the RestaurantRead schema
+        return [RestaurantRead.from_orm(restaurant) for restaurant in restaurants]
+
+    except Exception as e:
+        print("Error retrieving all restaurants:", e)
+        raise HTTPException(status_code=500, detail="Failed to fetch restaurants")
+
+
+# -----------------------------------------------
 # 🔍 Restaurant Search with Availability
 # -----------------------------------------------
 @router.get("/search", response_model=List[RestaurantRead])
@@ -33,8 +50,8 @@ def search_restaurants(
     city: Optional[str] = None,
     cuisine: Optional[str] = None,
     zipcode: Optional[str] = None,
-    date: Optional[str] = None,  # Format: YYYY-MM-DD
-    time: Optional[str] = None,  # Format: HH:MM
+    date: Optional[str] = None,
+    time: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
     try:
