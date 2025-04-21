@@ -4,5 +4,8 @@
     "scripts": {
         "dev": "uvicorn main:app --reload",
         "start": "uvicorn main:app"
+    },
+    "dependencies": {
+        "requests": "^0.3.0"
     }
 }
