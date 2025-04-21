@@ -1,0 +1,8 @@
+{
+    "name": "fastapi-project",
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "uvicorn main:app --reload",
+        "start": "uvicorn main:app"
+    }
+}
