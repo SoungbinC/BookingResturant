@@ -27,23 +27,26 @@ class Restaurant(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
-    description = Column(Text)  # Use Text for longer content
+    description = Column(Text)
 
     address = Column(String)
-    map_url = Column(String)  # New: external maps link if needed
+    map_url = Column(String)
 
     city = Column(String)
     state = Column(String)
     zipcode = Column(String)
 
     cuisine = Column(String)
-    price_range = Column(
-        String
-    )  # Changed from cost_rating to support "$$", "$$$", etc.
-    rating = Column(Float)  # New: numerical rating (e.g., 4.5 stars)
+    price_range = Column(String)
+    rating = Column(Float)
 
-    open_time = Column(Time, nullable=True)  # Made nullable in case it's missing
-    close_time = Column(Time, nullable=True)
+    open_mon = Column(String)
+    open_tue = Column(String)
+    open_wed = Column(String)
+    open_thu = Column(String)
+    open_fri = Column(String)
+    open_sat = Column(String)
+    open_sun = Column(String)
 
     photo_url = Column(String)
 
@@ -57,7 +60,13 @@ class Restaurant(Base):
 
     is_approved = Column(Boolean, default=False)
 
-    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner_id = Column(
+        Integer,
+        ForeignKey(
+            "users.id",
+            ondelete="CASCADE",
+        ),
+    )
     owner = relationship("User", back_populates="restaurants")
 
     booking_slots = relationship("BookingSlot", back_populates="restaurant")

@@ -18,9 +18,30 @@ class Reservation(Base):
     __tablename__ = "reservations"
 
     id = Column(Integer, primary_key=True)
-    restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    booking_slot_id = Column(Integer, ForeignKey("booking_slots.id"), nullable=False)
+    restaurant_id = Column(
+        Integer,
+        ForeignKey(
+            "restaurants.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+    user_id = Column(
+        Integer,
+        ForeignKey(
+            "users.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+    booking_slot_id = Column(
+        Integer,
+        ForeignKey(
+            "booking_slots.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
     reservation_time = Column(DateTime, nullable=False)
     number_of_people = Column(Integer, nullable=False)
     status = Column(

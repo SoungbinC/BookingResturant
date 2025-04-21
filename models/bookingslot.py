@@ -8,7 +8,14 @@ class BookingSlot(Base):
     __tablename__ = "booking_slots"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False)
+    restaurant_id = Column(
+        Integer,
+        ForeignKey(
+            "restaurants.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=False)
     is_booked = Column(Boolean, default=False)

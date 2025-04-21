@@ -21,11 +21,32 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.CUSTOMER)
+    email = Column(
+        String,
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    hashed_password = Column(
+        String,
+        nullable=False,
+    )
+    role = Column(
+        Enum(UserRole),
+        nullable=False,
+        default=UserRole.CUSTOMER,
+    )
 
     # Relationship to reservations
-    reservations = relationship("Reservation", back_populates="user")
-    restaurants = relationship("Restaurant", back_populates="owner")
-    reviews = relationship("Review", back_populates="user")
+    reservations = relationship(
+        "Reservation",
+        back_populates="user",
+    )
+    restaurants = relationship(
+        "Restaurant",
+        back_populates="owner",
+    )
+    reviews = relationship(
+        "Review",
+        back_populates="user",
+    )

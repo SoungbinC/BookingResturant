@@ -1,5 +1,3 @@
-# models/review.py
-
 from sqlalchemy import Column, Integer, ForeignKey, Text, DateTime, func
 from sqlalchemy.orm import relationship
 from .common import Base
@@ -10,8 +8,12 @@ class Review(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    restaurant_id = Column(
+        Integer, ForeignKey("restaurants.id", ondelete="CASCADE"), nullable=False
+    )
 
     rating = Column(Integer, nullable=False)
     comment = Column(Text, nullable=True)
