@@ -11,7 +11,7 @@ import {
     GridItem,
     Wrap,
 } from "@chakra-ui/react"
-import { Restaurant } from "@/types/restaurants"
+import { Restaurant } from "@/types/restaurantsdto"
 import { Link } from "react-router-dom"
 
 interface RestaurantsHomeProps {

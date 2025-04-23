@@ -3,7 +3,7 @@ import NotFound from "./routes/NotFound"
 import Root from "./routes/root"
 
 import Home from "./routes/pages/HomePage/Home"
-import RestaurantDetail from "./routes/pages/RestaurantDetail"
+import RestaurantDetail from "./routes/pages/RestuarntDetail/RestaurantDetail"
 const router = createBrowserRouter([
     {
         path: "/",

@@ -12,3 +12,9 @@ export const getRestaurants = () =>
 // Fetch one restaurant by ID
 export const getRestaurant = (id: number) =>
     instance.get(`/restaurants/${id}`).then((res) => res.data)
+
+export const getRestaurantBookingAvailability = (id: number) =>
+    instance.get(`/restaurants/${id}/available-slots`).then((res) => res.data)
+
+export const getRestaurantReviews = (id: number) =>
+    instance.get(`/restaurants/${id}/reviews`).then((res) => res.data)
