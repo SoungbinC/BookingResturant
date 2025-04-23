@@ -33,10 +33,14 @@ def get_all_restaurants(db: Session = Depends(get_db)):
         # Retrieve all restaurants from the database
         restaurants = db.query(Restaurant).all()
 
+        if not restaurants:
+            raise HTTPException(status_code=404, detail="No restaurants found")
+
         # Return a list of restaurants serialized using the RestaurantRead schema
         return [RestaurantRead.from_orm(restaurant) for restaurant in restaurants]
 
     except Exception as e:
+        # Log error for debugging
         print("Error retrieving all restaurants:", e)
         raise HTTPException(status_code=500, detail="Failed to fetch restaurants")
 

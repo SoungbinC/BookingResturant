@@ -1,18 +1,20 @@
 from pydantic import BaseModel, validator
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, time
 from schemas.bookingslot_schema import BookingSlotCreate
 from enum import Enum
 from models import RestaurantStatus
 from datetime import time
 
 
+# Enum for Restaurant Status
 class RestaurantStatusEnum(str, Enum):
     OPEN = "OPEN"
     CLOSED = "CLOSED"
     RENOVATING = "RENOVATING"
 
 
+# Create Model for Restaurants
 class RestaurantCreate(BaseModel):
     name: str
     address: str
@@ -20,7 +22,7 @@ class RestaurantCreate(BaseModel):
     state: str
     zipcode: str
     cuisine: str
-    cost_rating: int
+    price_range: str  # Updated to price_range
     open_time: time
     close_time: time
     description: Optional[str] = None
@@ -38,24 +40,35 @@ class RestaurantCreate(BaseModel):
         from_attributes = True
 
 
+# DB model for restaurant with owner_id and approval flag
 class RestaurantDB(RestaurantCreate):
     owner_id: int
     is_approved: Optional[bool] = False
 
 
+# Model for Restaurant Read Response
 class RestaurantRead(BaseModel):
     id: int
     name: str
+    description: str
     address: str
-    city: str
-    state: str
-    zipcode: str
-    cuisine: str
-    cost_rating: int
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zipcode: Optional[str] = None
+    cuisine: Optional[str] = None
+    price_range: Optional[str] = None
+    rating: Optional[float] = None
+    open_mon: Optional[str] = None
+    open_tue: Optional[str] = None
+    open_wed: Optional[str] = None
+    open_thu: Optional[str] = None
+    open_fri: Optional[str] = None
+    open_sat: Optional[str] = None
+    open_sun: Optional[str] = None
+    photo_url: Optional[str] = None
     created_at: str
     updated_at: str
-    available_time_slots: List[str]
-    status: RestaurantStatus
+    status: RestaurantStatusEnum
     is_approved: bool
 
     class Config:
@@ -73,23 +86,23 @@ class RestaurantRead(BaseModel):
             if obj.booking_slots
             else []
         )
-        obj.status = obj.status if obj.status else RestaurantStatus.OPEN
+        obj.status = obj.status.name if obj.status else RestaurantStatusEnum.OPEN.value
         obj.is_approved = obj.is_approved if obj.is_approved is not None else False
         return super().from_orm(obj)
 
 
+# Model for searching restaurants
 class RestaurantSearch(BaseModel):
     cuisine: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
-    available_time_slots: Optional[List[str]] = (
-        None  # Could be used for filtering based on available slots
-    )
+    available_time_slots: Optional[List[str]] = None
 
     class Config:
         from_attributes = True
 
 
+# Model for updating a restaurant's information
 class RestaurantUpdate(BaseModel):
     name: Optional[str]
     address: Optional[str]
@@ -97,7 +110,7 @@ class RestaurantUpdate(BaseModel):
     state: Optional[str]
     zipcode: Optional[str]
     cuisine: Optional[str]
-    cost_rating: Optional[int]
+    price_range: Optional[str]  # Changed from cost_rating to price_range
     open_time: Optional[time]
     close_time: Optional[time]
     description: Optional[str]
@@ -107,8 +120,24 @@ class RestaurantUpdate(BaseModel):
         from_attributes = True
 
 
+# Model for updating restaurant status
 class RestaurantStatusUpdate(BaseModel):
     status: RestaurantStatusEnum
 
     class Config:
         from_attributes = True
+
+
+# Restaurant Model in the database
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    DateTime,
+    Enum,
+    Boolean,
+    Float,
+    Text,
+    Time,
+)
