@@ -6,20 +6,24 @@ from typing import List, Optional, Tuple
 from dependencies.auth import get_current_user, require_role
 from dependencies.database import get_db
 from models import Restaurant, BookingSlot, Review, UserRole
-from schemas.restaurant_schema import RestaurantRead
+
+from schemas.restaurant_schema import RestaurantRead, RestaurantSearchResult
 from schemas.bookingslot_schema import BookingSlotRead
 from schemas.review_schema import ReviewCreate, ReviewRead
 
+
 from patterns.strategy import SearchStrategy
+from services.slot_service import get_available_slots_for_restaurant
+
+
 from services.search_service import (
     NameSearchStrategy,
-    CitySearchStrategy,
     CuisineSearchStrategy,
-    ZipSearchStrategy,
+    CitySearchStrategy,
+    ZipcodeSearchStrategy,
     TimeWindowSlotStrategy,
     SearchContext,
 )
-from services.slot_service import get_available_slots_for_restaurant
 
 router = APIRouter(prefix="/restaurants", tags=["Shared/ Restaurants API"])
 
@@ -46,6 +50,56 @@ def get_all_restaurants(db: Session = Depends(get_db)):
 
 
 # -----------------------------------------------
+# 🔍 Search Restaurants
+# -----------------------------------------------
+
+
+@router.get("/search", response_model=List[RestaurantRead])
+def search_restaurants(
+    name: Optional[str] = None,
+    city: Optional[str] = None,
+    cuisine: Optional[str] = None,
+    zipcode: Optional[str] = None,
+    date: Optional[str] = None,
+    time: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    try:
+        print(f"Received Search Parameters:")
+        print(
+            f"name={name}, city={city}, cuisine={cuisine}, zipcode={zipcode}, date={date}, time={time}"
+        )
+
+        query = db.query(Restaurant)
+
+        strategies: List[Tuple[SearchStrategy, Optional[str]]] = [
+            (NameSearchStrategy(), name),
+            (CitySearchStrategy(), city),
+            (CuisineSearchStrategy(), cuisine),
+            (ZipcodeSearchStrategy(), zipcode),
+        ]
+
+        if date and time:
+            search_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
+            time_window = (
+                search_datetime - timedelta(minutes=30),
+                search_datetime + timedelta(minutes=30),
+            )
+            strategies.append((TimeWindowSlotStrategy(), time_window))
+
+        filtered_query = SearchContext(strategies).apply_filters(query)
+        restaurants = filtered_query.limit(10).all()
+
+        print(f"Found restaurants: {restaurants}")
+
+        return [RestaurantRead.from_orm(r) for r in restaurants]
+
+    except Exception as e:
+        print("Search failed:", e)
+        raise HTTPException(status_code=500, detail="Restaurant search failed")
+
+
+# -----------------------------------------------
 # 📋 Get Restaurant by ID
 # -----------------------------------------------
 @router.get("/{restaurant_id}", response_model=RestaurantRead)
@@ -64,46 +118,6 @@ def get_restaurant_by_id(restaurant_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         print("Error retrieving restaurant by ID:", e)
         raise HTTPException(status_code=500, detail="Failed to fetch restaurant")
-
-
-# -----------------------------------------------
-# 🔍 Restaurant Search with Availability
-# -----------------------------------------------
-@router.get("/search", response_model=List[RestaurantRead])
-def search_restaurants(
-    name: Optional[str] = None,
-    city: Optional[str] = None,
-    cuisine: Optional[str] = None,
-    zipcode: Optional[str] = None,
-    date: Optional[str] = None,
-    time: Optional[str] = None,
-    db: Session = Depends(get_db),
-):
-    try:
-        query = db.query(Restaurant)
-
-        strategies: List[Tuple[SearchStrategy, Optional[str]]] = [
-            (NameSearchStrategy(), name),
-            (CitySearchStrategy(), city),
-            (CuisineSearchStrategy(), cuisine),
-            (ZipSearchStrategy(), zipcode),
-        ]
-
-        if date and time:
-            search_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
-            time_window = (
-                search_datetime - timedelta(minutes=30),
-                search_datetime + timedelta(minutes=30),
-            )
-            strategies.append((TimeWindowSlotStrategy(), time_window))
-
-        filtered_query = SearchContext(strategies).apply_filters(query)
-        restaurants = filtered_query.limit(10).all()
-        return [RestaurantRead.from_orm(r) for r in restaurants]
-
-    except Exception as e:
-        print("Search failed:", e)
-        raise HTTPException(status_code=500, detail="Restaurant search failed")
 
 
 # -----------------------------------------------

@@ -14,7 +14,9 @@ class RestaurantStatusEnum(str, Enum):
     RENOVATING = "RENOVATING"
 
 
+# -----------------------------------
 # Create Model for Restaurants
+# -----------------------------------
 class RestaurantCreate(BaseModel):
     name: str
     address: str
@@ -47,17 +49,23 @@ class RestaurantDB(RestaurantCreate):
 
 
 # Model for Restaurant Read Response
+
+
 class RestaurantRead(BaseModel):
     id: int
     name: str
-    description: str
+    description: Optional[str] = None
     address: str
+    map_url: Optional[str] = None
     city: Optional[str] = None
-    state: Optional[str] = None
-    zipcode: Optional[str] = None
-    cuisine: Optional[str] = None
-    price_range: Optional[str] = None
+    state: str
+    zipcode: str
+    cuisine: str
+    price_range: str
     rating: Optional[float] = None
+    photo_url: Optional[str] = None
+    status: RestaurantStatus
+    is_approved: bool
     open_mon: Optional[str] = None
     open_tue: Optional[str] = None
     open_wed: Optional[str] = None
@@ -65,11 +73,9 @@ class RestaurantRead(BaseModel):
     open_fri: Optional[str] = None
     open_sat: Optional[str] = None
     open_sun: Optional[str] = None
-    photo_url: Optional[str] = None
-    created_at: str
-    updated_at: str
-    status: RestaurantStatusEnum
-    is_approved: bool
+    created_at: datetime
+    updated_at: datetime
+    available_time_slots: List[str] = []  # To store available time slots
 
     class Config:
         from_attributes = True
@@ -78,6 +84,8 @@ class RestaurantRead(BaseModel):
     def from_orm(cls, obj):
         obj.created_at = obj.created_at.isoformat() if obj.created_at else None
         obj.updated_at = obj.updated_at.isoformat() if obj.updated_at else None
+
+        # Formatting available time slots as a list of strings
         obj.available_time_slots = (
             [
                 f"{slot.start_time.isoformat()} - {slot.end_time.isoformat()}"
@@ -86,20 +94,39 @@ class RestaurantRead(BaseModel):
             if obj.booking_slots
             else []
         )
-        obj.status = obj.status.name if obj.status else RestaurantStatusEnum.OPEN.value
+
+        obj.status = (
+            RestaurantStatus(obj.status.value) if obj.status else RestaurantStatus.OPEN
+        )
         obj.is_approved = obj.is_approved if obj.is_approved is not None else False
+
         return super().from_orm(obj)
 
 
-# Model for searching restaurants
-class RestaurantSearch(BaseModel):
-    cuisine: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    available_time_slots: Optional[List[str]] = None
+class RestaurantSearchResult(BaseModel):
+    id: int
+    name: str
+    cuisine: str
+    price_range: str
+    rating: Optional[float] = None
+    available_time_slots: List[str] = []  # To show available time slots
+
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        # Convert datetime to ISO format
+        obj.created_at = obj.created_at.isoformat() if obj.created_at else None
+        obj.updated_at = obj.updated_at.isoformat() if obj.updated_at else None
+        obj.available_time_slots = [
+            f"{slot.start_time.isoformat()} - {slot.end_time.isoformat()}"
+            for slot in obj.booking_slots
+        ]
+        return super().from_orm(obj)
 
 
 # Model for updating a restaurant's information
@@ -126,18 +153,3 @@ class RestaurantStatusUpdate(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-# Restaurant Model in the database
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    ForeignKey,
-    DateTime,
-    Enum,
-    Boolean,
-    Float,
-    Text,
-    Time,
-)

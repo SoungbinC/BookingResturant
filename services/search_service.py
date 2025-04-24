@@ -1,48 +1,48 @@
-from patterns.strategy import SearchStrategy
+from sqlalchemy.orm import Query
+from sqlalchemy import func
 from models import Restaurant, BookingSlot
-from typing import List, Tuple
-from datetime import datetime
-from sqlalchemy.orm import aliased
-
-# Search List
-# ===========================================
+from typing import Optional
+from patterns.strategy import SearchStrategy
 
 
 class NameSearchStrategy(SearchStrategy):
-    def apply(self, query, value):
+    def apply(self, query: Query, value: Optional[str]):
         if value:
             return query.filter(Restaurant.name.ilike(f"%{value}%"))
         return query
 
 
+class CuisineSearchStrategy(SearchStrategy):
+    def apply(self, query: Query, value: Optional[str]):
+        if value:
+            cuisines = [v.strip() for v in value.split(",")]
+            for cuisine in cuisines:
+                query = query.filter(Restaurant.cuisine.ilike(f"%{cuisine}%"))
+        return query
+
+
 class CitySearchStrategy(SearchStrategy):
-    def apply(self, query, value):
+    def apply(self, query: Query, value: Optional[str]):
         if value:
             return query.filter(Restaurant.city.ilike(f"%{value}%"))
         return query
 
 
-class ZipSearchStrategy(SearchStrategy):
-    def apply(self, query, value):
+class ZipcodeSearchStrategy(SearchStrategy):
+    def apply(self, query: Query, value: Optional[str]):
         if value:
-            return query.filter(Restaurant.zipcode == value)
-        return query
-
-
-class CuisineSearchStrategy(SearchStrategy):
-    def apply(self, query, value):
-        if value:
-            return query.filter(Restaurant.cuisine.ilike(f"%{value}%"))
+            return query.filter(Restaurant.zipcode.ilike(f"%{value}%"))
         return query
 
 
 class TimeWindowSlotStrategy(SearchStrategy):
-    def apply(self, query, time_window: tuple):
+    def apply(self, query: Query, time_window: tuple):
         start, end = time_window
 
-        # Subquery to find restaurant_ids that have unbooked slots in time window
+        # Subquery to find restaurant_ids that have unbooked slots in the given time window
         available_slot_restaurant_ids = (
-            query.session.query(BookingSlot.restaurant_id)
+            query.session.query(Restaurant.id)
+            .join(Restaurant.booking_slots)
             .filter(
                 BookingSlot.is_booked == False,
                 BookingSlot.start_time >= start,
@@ -59,10 +59,11 @@ class TimeWindowSlotStrategy(SearchStrategy):
 
 
 class SearchContext:
-    def __init__(self, strategies: List[Tuple[SearchStrategy, str]]):
+    def __init__(self, strategies: list):
         self.strategies = strategies
 
     def apply_filters(self, query):
         for strategy, value in self.strategies:
+            # Each strategy applies independently and accumulates results
             query = strategy.apply(query, value)
         return query

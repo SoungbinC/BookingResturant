@@ -1,16 +1,16 @@
 from .restaurant_schema import (
-    RestaurantSearch,
     RestaurantCreate,
     RestaurantDB,
     RestaurantRead,
+    RestaurantSearchResult,
 )
 from .reservation_schema import ReservationCreate, ReservationRead
 
 __all__ = [
-    "RestaurantSearch",
     "RestaurantCreate",
     "RestaurantDB",
     "RestaurantRead",
     "ReservationCreate",
     "ReservationRead",
+    "RestaurantSearchResult",
 ]
