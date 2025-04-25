@@ -1,61 +1,66 @@
-import { Button, Field, Input, Stack, HStack } from "@chakra-ui/react"
-import { PasswordInput } from "@/components/ui/password-input"
 import { useForm } from "react-hook-form"
+import { login } from "@/api/authapi"
+import { Button, Input, Field, Stack, HStack } from "@chakra-ui/react"
 
 interface FormValues {
     username: string
     password: string
 }
 
-interface SocialLoginProps {
+interface Props {
     onCancel: () => void
+    onLoginSuccess: () => void
 }
 
-export default function SocialLogin({ onCancel }: SocialLoginProps) {
+export default function SocialLogin({ onCancel, onLoginSuccess }: Props) {
     const {
         register,
         handleSubmit,
         formState: { errors },
     } = useForm<FormValues>()
 
-    const onSubmit = (data: FormValues) => {
-        console.log("Login Submitted:", data)
+    const onSubmit = async (data: FormValues) => {
+        try {
+            await login(data.username, data.password)
+            console.log("✅ Login successful")
+            onLoginSuccess()
+        } catch (err: unknown) {
+            console.error("❌ Login failed:", err)
+            alert("❌ Login failed. Please check your credentials.")
+        }
     }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
-            <Stack gap={4} align="flex-start" maxW="sm" width="100%">
-                <Field.Root invalid={!!errors.username} width="100%">
-                    <Field.Label>Username</Field.Label>
+            <Stack gap={4}>
+                <Field.Root invalid={!!errors.username}>
+                    <Field.Label>username</Field.Label>
                     <Input
                         {...register("username", {
-                            required: "Username is required",
+                            required: "username is required",
                         })}
-                        placeholder="Enter username"
                     />
                     <Field.ErrorText>
                         {errors.username?.message}
                     </Field.ErrorText>
                 </Field.Root>
-
-                <Field.Root invalid={!!errors.password} width="100%">
+                <Field.Root invalid={!!errors.password}>
                     <Field.Label>Password</Field.Label>
-                    <PasswordInput
+                    <Input
+                        type="password"
                         {...register("password", {
                             required: "Password is required",
                         })}
-                        placeholder="Enter password"
                     />
                     <Field.ErrorText>
                         {errors.password?.message}
                     </Field.ErrorText>
                 </Field.Root>
-
-                <HStack width="100%" justify="flex-end" pt={2}>
-                    <Button variant="outline" type="button" onClick={onCancel}>
+                <HStack justify="flex-end">
+                    <Button type="button" onClick={onCancel}>
                         Cancel
                     </Button>
-                    <Button colorScheme="blue" type="submit">
+                    <Button type="submit" colorScheme="blue">
                         Login
                     </Button>
                 </HStack>

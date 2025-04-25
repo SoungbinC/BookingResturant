@@ -1,83 +1,64 @@
 import { Button, Field, Input, Stack, HStack } from "@chakra-ui/react"
-import { PasswordInput } from "@/components/ui/password-input"
 import { useForm } from "react-hook-form"
+import { signup, SignupData } from "@/api/authapi"
 
-interface FormValues {
-    username: string
-    email: string
-    password: string
-}
-
-interface SignupFormProps {
+interface Props {
     onCancel: () => void
 }
 
-export default function SignupForm({ onCancel }: SignupFormProps) {
+export default function SignupForm({ onCancel }: Props) {
     const {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<FormValues>()
+    } = useForm<SignupData>()
 
-    const onSubmit = (data: FormValues) => {
-        console.log("Signup Submitted:", data)
+    const onSubmit = async (data: SignupData) => {
+        try {
+            const result = await signup(data)
+            console.log("✅ Account created:", result)
+            alert("Account created successfully!")
+            onCancel()
+        } catch (err) {
+            if (err instanceof Error) {
+                console.error("❌ Signup failed:", err.message)
+                alert("Signup failed. Please try again.")
+            } else {
+                console.error("❌ Unknown error:", err)
+                alert("An unexpected error occurred. Please try again.")
+            }
+        }
     }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
-            <Stack gap={4} align="flex-start" maxW="sm" width="100%">
-                <Field.Root invalid={!!errors.username} width="100%">
+            <Stack gap={4} maxW="sm" width="100%">
+                <Field.Root invalid={!!errors.username}>
                     <Field.Label>Username</Field.Label>
-                    <Input
-                        {...register("username", {
-                            required: "Username is required",
-                        })}
-                        placeholder="Enter username"
-                    />
-                    <Field.ErrorText>
-                        {errors.username?.message}
-                    </Field.ErrorText>
+                    <Input {...register("username", { required: true })} />
                 </Field.Root>
 
-                <Field.Root invalid={!!errors.email} width="100%">
+                <Field.Root invalid={!!errors.email}>
                     <Field.Label>Email</Field.Label>
                     <Input
                         type="email"
-                        {...register("email", {
-                            required: "Email is required",
-                            pattern: {
-                                value: /^\S+@\S+$/i,
-                                message: "Invalid email address",
-                            },
-                        })}
-                        placeholder="Enter email"
+                        {...register("email", { required: true })}
                     />
-                    <Field.ErrorText>{errors.email?.message}</Field.ErrorText>
                 </Field.Root>
 
-                <Field.Root invalid={!!errors.password} width="100%">
+                <Field.Root invalid={!!errors.password}>
                     <Field.Label>Password</Field.Label>
-                    <PasswordInput
-                        {...register("password", {
-                            required: "Password is required",
-                            minLength: {
-                                value: 6,
-                                message:
-                                    "Password must be at least 6 characters",
-                            },
-                        })}
-                        placeholder="Enter password"
+                    <Input
+                        type="password"
+                        {...register("password", { required: true })}
                     />
-                    <Field.ErrorText>
-                        {errors.password?.message}
-                    </Field.ErrorText>
                 </Field.Root>
 
-                <HStack width="100%" justify="flex-end" pt={2}>
-                    <Button variant="outline" type="button" onClick={onCancel}>
+                <HStack justify="flex-end" pt={2}>
+                    <Button onClick={onCancel} variant="outline">
                         Cancel
                     </Button>
-                    <Button colorScheme="red" type="submit">
+                    <Button colorPalette="red" type="submit">
                         Sign Up
                     </Button>
                 </HStack>

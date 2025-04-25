@@ -1,6 +1,6 @@
 // src/components/LoginDialog.tsx
 import { Dialog } from "@chakra-ui/react"
-
+import useUser from "@/lib/useUser"
 import SocialLogin from "./SoicalLogin"
 
 interface LoginDialogProps {
@@ -9,6 +9,7 @@ interface LoginDialogProps {
 }
 
 export default function LoginDialog({ isOpen, onClose }: LoginDialogProps) {
+    const { refetchUser } = useUser()
     return (
         <Dialog.Root
             key="center"
@@ -31,7 +32,13 @@ export default function LoginDialog({ isOpen, onClose }: LoginDialogProps) {
                         </Dialog.Title>
                     </Dialog.Header>
                     <Dialog.Body>
-                        <SocialLogin onCancel={onClose} />
+                        <SocialLogin
+                            onCancel={onClose}
+                            onLoginSuccess={() => {
+                                refetchUser() // refetch user data
+                                onClose() // close modal
+                            }}
+                        />
                     </Dialog.Body>
                 </Dialog.Content>
             </Dialog.Positioner>
