@@ -1,6 +1,6 @@
 import { Box, Button, HStack, Avatar, Menu, Portal } from "@chakra-ui/react"
-import { Link, Outlet } from "react-router-dom"
-import { useState } from "react"
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom"
+import { useState, useEffect } from "react"
 import { MdDinnerDining } from "react-icons/md"
 
 import toast from "react-hot-toast"
@@ -16,17 +16,41 @@ export default function Root() {
 
     const { user, isLoggedIn, userLoading } = useUser()
 
+    const navigate = useNavigate()
+    const location = useLocation()
+
     const handleLogout = async () => {
         try {
             await logout()
             toast.success("👋 Logged out successfully!")
             localStorage.clear()
-            window.location.reload()
+
+            const protectedPaths = ["/manager-dashboard", "/profile"]
+
+            if (protectedPaths.includes(location.pathname)) {
+                navigate("/") // ✅ Go home if logout from dashboard
+                setTimeout(() => {
+                    window.location.reload()
+                }, 100)
+            } else {
+                window.location.reload()
+            }
         } catch (err: unknown) {
             console.error("❌ Logout failed:", err)
             toast.error("Failed to log out. Please try again.")
         }
     }
+
+    useEffect(() => {
+        if (
+            !userLoading &&
+            isLoggedIn &&
+            user?.role === "MANAGER" &&
+            location.pathname === "/"
+        ) {
+            navigate("/manager-dashboard")
+        }
+    }, [userLoading, isLoggedIn, user, location.pathname, navigate])
 
     return (
         <Box>

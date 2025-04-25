@@ -5,6 +5,8 @@ import Root from "./routes/root"
 import Home from "./routes/pages/HomePage/Home"
 import RestaurantDetail from "./routes/pages/RestuarntDetail/RestaurantDetail"
 import CustomerDashboard from "./routes/pages/Customer/Customerdashboard"
+import ManagerDashboard from "./routes/pages/Manager/ManagerDashboard"
+
 const router = createBrowserRouter([
     {
         path: "/",
@@ -22,6 +24,10 @@ const router = createBrowserRouter([
             {
                 path: "profile",
                 element: <CustomerDashboard />,
+            },
+            {
+                path: "manager-dashboard",
+                element: <ManagerDashboard />,
             },
         ],
     },

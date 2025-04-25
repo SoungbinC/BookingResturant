@@ -1,5 +1,6 @@
 // src/components/LoginDialog.tsx
 import { Dialog } from "@chakra-ui/react"
+import { useNavigate } from "react-router-dom"
 import useUser from "@/lib/useUser"
 import SocialLogin from "./SoicalLogin"
 
@@ -9,6 +10,7 @@ interface LoginDialogProps {
 }
 
 export default function LoginDialog({ isOpen, onClose }: LoginDialogProps) {
+    const navigate = useNavigate()
     const { refetchUser } = useUser()
     return (
         <Dialog.Root
@@ -34,9 +36,16 @@ export default function LoginDialog({ isOpen, onClose }: LoginDialogProps) {
                     <Dialog.Body>
                         <SocialLogin
                             onCancel={onClose}
-                            onLoginSuccess={() => {
-                                refetchUser() // refetch user data
-                                onClose() // close modal
+                            onLoginSuccess={async () => {
+                                const { data: user } = await refetchUser()
+
+                                if (user?.role === "MANAGER") {
+                                    navigate("/manager-dashboard")
+                                } else {
+                                    navigate("/")
+                                }
+
+                                onClose()
                             }}
                         />
                     </Dialog.Body>

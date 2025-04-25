@@ -17,8 +17,10 @@ import { cancelReservation } from "@/api/reservationapi"
 import { format } from "date-fns"
 import { useState } from "react"
 import { toast } from "react-hot-toast"
+import { useNavigate } from "react-router-dom"
 
 export default function CustomerDashboard() {
+    const navigate = useNavigate()
     const { data: profile, isLoading: loadingProfile } = useQuery({
         queryKey: ["customerProfile"],
         queryFn: getCustomerProfile,
@@ -32,6 +34,10 @@ export default function CustomerDashboard() {
     const queryClient = useQueryClient()
     const [visibleCount, setVisibleCount] = useState(3)
 
+    if (!loadingProfile && !profile) {
+        navigate("/")
+        return null
+    }
     const handleSeeMore = () => {
         setVisibleCount((prev) => prev + 3)
     }
@@ -43,7 +49,7 @@ export default function CustomerDashboard() {
         try {
             await cancelReservation({ restaurant_id, booking_slot_id })
             toast.success("✅ Reservation canceled")
-            queryClient.invalidateQueries(["customerReservations"]) // refetch updated reservations
+            queryClient.invalidateQueries(["customerReservations"])
         } catch (err) {
             console.error(err)
             toast.error("❌ Failed to cancel reservation")

@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
 import {
     Box,
     Heading,
@@ -58,7 +57,6 @@ export default function BookingSlots({
         useState<BookingSlot[]>(availability)
 
     const { isLoggedIn } = useUser()
-    const navigate = useNavigate()
 
     const days = [
         "Monday",
@@ -86,8 +84,7 @@ export default function BookingSlots({
 
     const handleBookSlot = async (slot: BookingSlot) => {
         if (!isLoggedIn) {
-            toast("⚠️ Please login as a customer to book a slot.")
-            navigate("/login")
+            toast("⚠️ Please login to book a slot.")
             return
         }
 

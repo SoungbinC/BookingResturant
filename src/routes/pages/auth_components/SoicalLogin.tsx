@@ -60,7 +60,7 @@ export default function SocialLogin({ onCancel, onLoginSuccess }: Props) {
                     <Button type="button" onClick={onCancel}>
                         Cancel
                     </Button>
-                    <Button type="submit" colorScheme="blue">
+                    <Button type="submit" colorPalette="red">
                         Login
                     </Button>
                 </HStack>
