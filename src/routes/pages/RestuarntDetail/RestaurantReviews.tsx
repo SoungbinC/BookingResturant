@@ -2,8 +2,17 @@ import { useQuery } from "@tanstack/react-query"
 import { getRestaurantReviews } from "@/api/restauratnsApi"
 import { LuAlarmClockPlus } from "react-icons/lu"
 import { Review } from "../../../types/reviewdto"
-import { Box, Heading, Stack, Text, Spinner, Alert } from "@chakra-ui/react"
+import {
+    Box,
+    Heading,
+    Stack,
+    Text,
+    Spinner,
+    Button,
+    Alert,
+} from "@chakra-ui/react"
 import { useState } from "react"
+
 interface Props {
     restaurantId: number
 }
@@ -22,6 +31,7 @@ export default function RestaurantReviews({ restaurantId }: Props) {
     const [expandedComments, setExpandedComments] = useState<
         Record<number, boolean>
     >({})
+    const [visibleCount, setVisibleCount] = useState(3)
 
     const isExpanded = (id: number) => expandedComments[id] ?? false
 
@@ -36,6 +46,11 @@ export default function RestaurantReviews({ restaurantId }: Props) {
         if (content.length <= 200) return content
         return isExpanded(id) ? content : content.slice(0, 200) + "..."
     }
+
+    const handleSeeMore = () => {
+        setVisibleCount((prev) => prev + 3)
+    }
+
     return (
         <Box mt={10}>
             <Heading size="md" mb={4}>
@@ -53,7 +68,7 @@ export default function RestaurantReviews({ restaurantId }: Props) {
                 </Alert.Root>
             ) : reviews && reviews.length > 0 ? (
                 <Stack gap={4}>
-                    {reviews.map((review: Review) => (
+                    {reviews.slice(0, visibleCount).map((review: Review) => (
                         <Box
                             key={review.id}
                             p={4}
@@ -115,6 +130,19 @@ export default function RestaurantReviews({ restaurantId }: Props) {
                             </Box>
                         </Box>
                     ))}
+
+                    {/* "See More Reviews" Button */}
+                    {visibleCount < reviews.length && (
+                        <Button
+                            mt={4}
+                            mx="auto"
+                            variant="outline"
+                            colorPalette="green"
+                            onClick={handleSeeMore}
+                        >
+                            See More Reviews
+                        </Button>
+                    )}
                 </Stack>
             ) : (
                 <Text>No reviews yet.</Text>

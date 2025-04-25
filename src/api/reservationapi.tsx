@@ -15,3 +15,25 @@ export const bookSlot = async (payload: BookSlotPayload) => {
     })
     return res.data
 }
+
+export const cancelReservation = async ({
+    restaurant_id,
+    booking_slot_id,
+}: {
+    restaurant_id: number
+    booking_slot_id: number
+}) => {
+    const res = await instance.post(
+        "/customers/reservations/cancel",
+        {
+            restaurant_id,
+            booking_slot_id,
+        },
+        {
+            headers: { "x-requires-auth": "true" },
+            withCredentials: true,
+        }
+    )
+
+    return res.data
+}
