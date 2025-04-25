@@ -4,6 +4,13 @@ from datetime import datetime
 from schemas.bookingslot_schema import BookingSlotRead
 
 
+class ReservationCreateRequest(BaseModel):
+    restaurant_id: int
+    reservation_time: datetime
+    number_of_people: int
+    booking_slot_id: int
+
+
 # Schema for creating a reservation
 class ReservationCreate(BaseModel):
     restaurant_id: int

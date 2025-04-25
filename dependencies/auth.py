@@ -6,6 +6,9 @@ from dependencies.config import config
 from dependencies.database import get_db
 from models import User, UserRole
 
+from fastapi import Request
+from fastapi import Cookie
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 # Config
@@ -26,19 +29,27 @@ def verify_token(token: str, credentials_exception):
         raise credentials_exception
 
 
-# Get current user function
 def get_current_user(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    access_token: str = Cookie(None),
+    db: Session = Depends(get_db),
 ):
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    user_id = verify_token(token, credentials_exception)
+
+    print("🐞 access_token from cookie:", access_token)  # ← Add this
+
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Missing access token")
+
+    token = access_token.replace("Bearer ", "")
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
     user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise credentials_exception
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
     return user
 
 

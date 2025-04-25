@@ -1,58 +1,147 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Response,
+    Cookie,
+)
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from jose import jwt, JWTError
 from passlib.context import CryptContext
+
 from dependencies.database import get_db
+from dependencies.config import config
+from dependencies.auth import get_current_user
 from models import User, UserRole
-from dependencies.config import Config
-from jose import jwt
-from datetime import timedelta, datetime
-from dependencies.auth import require_role
-from schemas.user_schema import UserCreate
+from schemas.user_schema import UserRead, UserCreate
+
+from fastapi import Request
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-
-# Initialize password context for hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-config = Config()
+
+# Config
+SECRET_KEY = config.SECRET_KEY
+ALGORITHM = config.ALGORITHM
 
 
-# Helper function to create JWT access token
-def create_access_token(data: dict, expires_delta: timedelta = None):
+# Token creation
+def create_access_token(data: dict, expires_minutes: int = 15):
     to_encode = data.copy()
-
-    # Set the expiration time using the current time plus expires_delta or default 15 minutes
-    expire = datetime.utcnow() + (
-        expires_delta if expires_delta else timedelta(minutes=15)
-    )
-
-    # Add expiration to the payload
+    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
     to_encode.update({"exp": expire})
-
-    # Encode the JWT token with the payload and the secret key
-    encoded_jwt = jwt.encode(to_encode, config.SECRET_KEY, algorithm=config.ALGORITHM)
-
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-# User registration route
+def create_refresh_token(data: dict, expires_days: int = 7):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=expires_days)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+# 🟢 Login route
+@router.post("/login")
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+):
+    username = form_data.username
+    password = form_data.password
+
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not user.verify_password(password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    access_token = create_access_token(data={"sub": str(user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+
+    response = JSONResponse(content={"message": "Login successful"})
+    response.set_cookie(
+        "access_token",
+        f"Bearer {access_token}",
+        httponly=True,
+        secure=False,
+        max_age=900,
+        samesite="lax",
+        path="/",
+    )
+    response.set_cookie(
+        "refresh_token",
+        f"Bearer {refresh_token}",
+        httponly=True,
+        secure=False,
+        max_age=604800,
+        samesite="lax",
+        path="/",
+    )
+    return response
+
+
+# 🔁 Refresh token route
+@router.post("/refresh")
+def refresh_token(refresh_token: str = Cookie(None), db: Session = Depends(get_db)):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Missing refresh token")
+
+    try:
+        token = refresh_token.replace("Bearer ", "")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=403, detail="Invalid refresh token")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_access_token = create_access_token(data={"sub": str(user.id)})
+
+    response = JSONResponse(content={"message": "Token refreshed"})
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {new_access_token}",
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=15 * 60,
+        path="/",
+    )
+    return response
+
+
+# 🚪 Logout route
+@router.post("/logout")
+def logout():
+    response = JSONResponse(content={"message": "Logged out"})
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
+    return response
+
+
+# 👤 Get current user
+@router.get("/me", response_model=UserRead)
+def read_users_me(request: Request, current_user: User = Depends(get_current_user)):
+    print("🍪 Cookies:", request.cookies)  # <--- check if access_token is present
+    return current_user
+
+
+# 🆕 Register new user
 @router.post("/register")
-def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
-
-    # Check if the email already exists
+def register(user_data: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Hash the password and store the new user in the database
     hashed_password = pwd_context.hash(user_data.password)
     new_user = User(
         username=user_data.username,
         email=user_data.email,
         hashed_password=hashed_password,
-        role=(
-            UserRole(user_data.role) if user_data.role else UserRole.CUSTOMER
-        ),  # Default to 'CUSTOMER' role
+        role=UserRole(user_data.role) if user_data.role else UserRole.CUSTOMER,
     )
 
     db.add(new_user)
@@ -60,18 +149,3 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return {"message": "User registered successfully", "user_id": new_user.id}
-
-
-# User login route
-@router.post("/login")
-def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
-):
-    # Find the user by email
-    user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not pwd_context.verify(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    # Create access token
-    access_token = create_access_token(data={"sub": str(user.id)})
-    return {"access_token": access_token, "token_type": "bearer"}

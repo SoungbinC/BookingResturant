@@ -5,7 +5,11 @@ from typing import List
 from dependencies.auth import require_role
 from dependencies.database import get_db
 from models import UserRole, Reservation, Review
-from schemas.reservation_schema import ReservationCreate, ReservationRead
+from schemas.reservation_schema import (
+    ReservationCreate,
+    ReservationRead,
+    ReservationCreateRequest,
+)
 from schemas.review_schema import ReviewCreate, ReviewRead
 from services.reservation_service import ReservationService
 from patterns.command import BookTableCommand
@@ -39,17 +43,21 @@ def get_my_reservations(db: Session = Depends(get_db), user=Depends(get_customer
 
 @router.post("/reservations", response_model=ReservationRead)
 def create_reservation(
-    reservation_data: ReservationCreate,
+    request_data: ReservationCreateRequest,
     db: Session = Depends(get_db),
     user=Depends(get_customer),
 ):
-    reservation_data.user_id = user.id
+    reservation_data = ReservationCreate(
+        **request_data.dict(),
+        user_id=user.id,  # ✅ Inject user ID here
+        status="pending",  # ✅ Set default explicitly
+    )
+
     reservation_service = ReservationService(db, user)
     command = BookTableCommand(reservation_service, reservation_data)
     reservation = command.execute()
 
     notify(reservation, "reservation_pending")
-
     return ReservationRead.from_orm(reservation)
 
 

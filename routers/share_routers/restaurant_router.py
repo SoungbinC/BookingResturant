@@ -56,12 +56,15 @@ def get_all_restaurants(db: Session = Depends(get_db)):
 
 @router.get("/search", response_model=List[RestaurantRead])
 def search_restaurants(
-    name: Optional[str] = None,
-    city: Optional[str] = None,
-    cuisine: Optional[str] = None,
-    zipcode: Optional[str] = None,
-    date: Optional[str] = None,
-    time: Optional[str] = None,
+    name: Optional[str] = Query(None),
+    cuisine: Optional[str] = Query(None),
+    city: Optional[str] = Query(None),
+    zipcode: Optional[str] = Query(None),
+    date: Optional[str] = Query(None),
+    time: Optional[str] = Query(None),
+    cost_rating: Optional[int] = Query(None),
+    page: Optional[int] = Query(1),  # Default to page 1
+    limit: Optional[int] = Query(10),  # Default to 10 results per page
     db: Session = Depends(get_db),
 ):
     try:

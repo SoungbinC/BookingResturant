@@ -3,6 +3,9 @@ from sqlalchemy import Column, Integer, String, Enum
 from .common import Base
 import enum
 from sqlalchemy.orm import relationship
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # UserRole Enum for defining user roles
 # This enum defines the different roles a user can have in the system.
@@ -50,3 +53,6 @@ class User(Base):
         "Review",
         back_populates="user",
     )
+
+    def verify_password(self, plain_password: str) -> bool:
+        return pwd_context.verify(plain_password, self.hashed_password)

@@ -43,6 +43,8 @@ class ReservationService:
             status="PENDING",
         )
 
+        slot.is_booked = True
+
         self.db.add(reservation)
         self.db.commit()
         self.db.refresh(reservation)
@@ -68,6 +70,15 @@ class ReservationService:
 
         state = get_state_instance(reservation)
         state.cancel(reservation)
+
+        slot = (
+            self.db.query(BookingSlot)
+            .filter(BookingSlot.id == reservation.booking_slot_id)
+            .first()
+        )
+
+        if slot:
+            slot.is_booked = False
 
         self.db.commit()
         self.db.refresh(reservation)

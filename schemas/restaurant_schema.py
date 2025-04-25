@@ -129,6 +129,20 @@ class RestaurantSearchResult(BaseModel):
         return super().from_orm(obj)
 
 
+class SearchInput(BaseModel):
+    name: Optional[str] = None
+    cuisine: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zipcode: Optional[str] = None
+    date: Optional[str] = None  # Format: YYYY-MM-DD
+    time: Optional[str] = None  # Format: HH:MM
+    table_size: Optional[int] = None  # Number of people for the table
+
+    class Config:
+        from_attributes = True  # If you're using ORM models
+
+
 # Model for updating a restaurant's information
 class RestaurantUpdate(BaseModel):
     name: Optional[str]

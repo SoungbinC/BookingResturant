@@ -3,6 +3,7 @@ from .restaurant_schema import (
     RestaurantDB,
     RestaurantRead,
     RestaurantSearchResult,
+    SearchInput,
 )
 from .reservation_schema import ReservationCreate, ReservationRead
 
@@ -13,4 +14,5 @@ __all__ = [
     "ReservationCreate",
     "ReservationRead",
     "RestaurantSearchResult",
+    "SearchInput",
 ]
