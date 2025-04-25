@@ -18,3 +18,29 @@ export const getRestaurantBookingAvailability = (id: number) =>
 
 export const getRestaurantReviews = (id: number) =>
     instance.get(`/restaurants/${id}/reviews`).then((res) => res.data)
+
+export type ValidSearchParams = {
+    name?: string
+    cuisine?: string
+    city?: string
+    zipcode?: string
+    date?: string
+    time?: string
+    cost_rating?: string[]
+    page?: number
+    limit?: number
+}
+
+export const getSearchRestaurants = (params: ValidSearchParams) => {
+    const searchParams = new URLSearchParams()
+
+    for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== "") {
+            searchParams.append(key, value.toString())
+        }
+    }
+
+    return instance
+        .get(`/restaurants/search?${searchParams.toString()}`)
+        .then((res) => res.data)
+}

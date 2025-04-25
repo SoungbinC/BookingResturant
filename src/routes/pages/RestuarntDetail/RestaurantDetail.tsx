@@ -11,6 +11,9 @@ import RestaurantInfo from "./RestuarantInfo"
 import RestaurantHours from "./ResturantHours"
 import BookingSlots from "./RestaurantBookingSlots"
 import RestaurantReviews from "./RestaurantReviews"
+import RestaurantMap from "./RestaurantMap"
+
+import { Flex, Separator } from "@chakra-ui/react"
 
 export default function RestaurantDetail() {
     const { id } = useParams<{ id: string }>()
@@ -55,12 +58,21 @@ export default function RestaurantDetail() {
     return (
         <Box px={6} py={10} maxW={"4xl"} mx="auto">
             <RestaurantInfo restaurant={restaurant} />
-            <RestaurantHours restaurant={restaurant} />
+            <Separator size="md" />
+            <Box my={10} gap={6}>
+                <Flex gap="2" direction={{ base: "column", md: "row" }}>
+                    <RestaurantHours restaurant={restaurant} />
+
+                    <RestaurantMap restaurant={restaurant} />
+                </Flex>
+            </Box>
+            <Separator size="md" />
             <BookingSlots
                 availability={availability}
                 isLoading={isAvailabilityLoading}
                 isError={isAvailabilityError}
             />
+            <Separator size="md" />
             <RestaurantReviews restaurantId={restaurantId} />
         </Box>
     )

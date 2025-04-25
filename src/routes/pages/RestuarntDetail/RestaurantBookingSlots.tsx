@@ -4,7 +4,6 @@ import {
     Text,
     SimpleGrid,
     Box,
-    Separator,
     Button,
     ButtonGroup,
 } from "@chakra-ui/react"
@@ -69,7 +68,6 @@ export default function BookingSlots({
 
     return (
         <Box my={6}>
-            <Separator my={6} />
             <Heading size="md" mb={4}>
                 Available Booking Slots
             </Heading>

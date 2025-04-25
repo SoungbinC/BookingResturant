@@ -1,5 +1,5 @@
 // src/components/RestaurantHours.tsx
-import { Heading, Text, SimpleGrid, Box, Separator } from "@chakra-ui/react"
+import { Heading, Text, SimpleGrid, Box } from "@chakra-ui/react"
 import { Restaurant } from "@/types/restaurantsdto"
 export default function RestaurantHours({
     restaurant,
@@ -8,7 +8,6 @@ export default function RestaurantHours({
 }) {
     return (
         <Box my={6}>
-            <Separator mb={6} />
             <Heading size="md" mb={4}>
                 Weekly Hours
             </Heading>

@@ -15,12 +15,17 @@ import { Restaurant } from "@/types/restaurantsdto"
 import { Link } from "react-router-dom"
 
 interface RestaurantsHomeProps {
-    restaurants: Restaurant[]
+    restaurants: Restaurant[] | null | undefined
 }
-
 export default function RestaurantsHome({ restaurants }: RestaurantsHomeProps) {
     const columns = useBreakpointValue({ base: 1, sm: 2, md: 3 })
-
+    if (!Array.isArray(restaurants)) {
+        return (
+            <Text textAlign="center" color="gray.500">
+                No restaurants found.
+            </Text>
+        )
+    }
     return (
         <Grid
             templateColumns={`repeat(${columns}, 1fr)`}

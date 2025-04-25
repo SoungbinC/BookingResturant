@@ -1,11 +1,17 @@
-// src/pages/Home.tsx
+import { useState } from "react"
 import { Box, Heading, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { getRestaurants } from "@/api/restauratnsApi"
 import RestaurantSearchBar from "./RestaurantSearchBar"
 import RestaurantsHome from "./RestaurantsHome"
 import RestaurantsHomeSkeleton from "./RestaurantsHomeSkeleton"
+import type { Restaurant } from "@/types/restaurantsdto"
+
 export default function Home() {
+    const [searchResults, setSearchResults] = useState<Restaurant[] | null>(
+        null
+    )
+
     const {
         data: restaurants,
         isLoading,
@@ -20,7 +26,7 @@ export default function Home() {
         <Box px={6} py={10}>
             <Stack align="center" gap={6} mb={10}>
                 <Heading size="lg">Restaurants</Heading>
-                <RestaurantSearchBar />
+                <RestaurantSearchBar onSearchResults={setSearchResults} />
             </Stack>
 
             {isError && (
@@ -32,7 +38,7 @@ export default function Home() {
             {isLoading ? (
                 <RestaurantsHomeSkeleton />
             ) : (
-                <RestaurantsHome restaurants={restaurants} />
+                <RestaurantsHome restaurants={searchResults ?? restaurants} />
             )}
         </Box>
     )

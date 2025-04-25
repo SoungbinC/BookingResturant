@@ -11,6 +11,7 @@ export interface Restaurant {
     cuisine?: string
     price_range?: string
     rating?: number
+    map_url?: string
     open_mon?: string
     open_tue?: string
     open_wed?: string
@@ -23,11 +24,4 @@ export interface Restaurant {
     updated_at: string
     status: "OPEN" | "CLOSED" | "RENOVATING"
     is_approved: boolean
-}
-export interface RestaurantSearchParams {
-    query: string
-    cuisine?: string
-    cost_rating?: number
-    page?: number
-    limit?: number
 }

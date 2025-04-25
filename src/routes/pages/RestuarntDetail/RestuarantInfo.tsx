@@ -23,7 +23,7 @@ export default function RestaurantInfo({
         (fullDescription.length > 200 ? "..." : "")
 
     return (
-        <Box>
+        <Box my={10}>
             {restaurant.photo_url && (
                 <Image
                     src={
