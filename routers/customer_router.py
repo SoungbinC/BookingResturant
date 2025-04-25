@@ -9,10 +9,11 @@ from schemas.reservation_schema import (
     ReservationCreate,
     ReservationRead,
     ReservationCreateRequest,
+    CancelReservationRequest,
 )
 from schemas.review_schema import ReviewCreate, ReviewRead
 from services.reservation_service import ReservationService
-from patterns.command import BookTableCommand
+from patterns.command import BookTableCommand, CancelReservationCommand
 from services.notification_service import notify
 
 router = APIRouter(prefix="/customers", tags=["Customer API"])
@@ -49,8 +50,8 @@ def create_reservation(
 ):
     reservation_data = ReservationCreate(
         **request_data.dict(),
-        user_id=user.id,  # ✅ Inject user ID here
-        status="pending",  # ✅ Set default explicitly
+        user_id=user.id,
+        status="pending",
     )
 
     reservation_service = ReservationService(db, user)
@@ -63,20 +64,21 @@ def create_reservation(
 
 @router.post("/reservations/cancel", response_model=ReservationRead)
 def cancel_reservation_and_release_slot(
-    payload: dict = Body(...),
+    payload: CancelReservationRequest,
     db: Session = Depends(get_db),
     user=Depends(get_customer),
 ):
-    restaurant_id = payload.get("restaurant_id")
-    booking_slot_id = payload.get("booking_slot_id")
-
-    if not restaurant_id or not booking_slot_id:
-        raise HTTPException(status_code=400, detail="Missing required fields.")
-
     reservation_service = ReservationService(db, user)
-    reservation = reservation_service.cancel(restaurant_id, booking_slot_id, user.id)
 
-    notify(reservation, "reservation_canceled")  # ✅ updated
+    command = CancelReservationCommand(
+        reservation_service,
+        restaurant_id=payload.restaurant_id,
+        booking_slot_id=payload.booking_slot_id,
+        user_id=user.id,
+    )
+
+    # notify(reservation, "reservation_canceled")  # ✅ updated
+    reservation = command.execute()
 
     return ReservationRead.from_orm(reservation)
 

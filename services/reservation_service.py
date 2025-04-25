@@ -1,7 +1,6 @@
 from models import Reservation, BookingSlot
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from utils.state_resolver import get_state_instance
 from patterns.chain.handlers import (
     CustomerCancelHandler,
     ManagerAccessHandler,
@@ -64,13 +63,10 @@ class ReservationService:
         if not reservation:
             raise HTTPException(status_code=404, detail="Reservation not found.")
 
-        # ✅ Chain of Responsibility for cancellation
         access_chain = CustomerCancelHandler(ManagerAccessHandler(AdminAccessHandler()))
         access_chain.handle(self.current_user, reservation)
 
-        state = get_state_instance(reservation)
-        state.cancel(reservation)
-
+        # ✅ Free up the booking slot first
         slot = (
             self.db.query(BookingSlot)
             .filter(BookingSlot.id == reservation.booking_slot_id)
@@ -80,10 +76,15 @@ class ReservationService:
         if slot:
             slot.is_booked = False
 
+        # ✅ Delete the reservation (not just mark canceled)
+        self.db.delete(reservation)
+
         self.db.commit()
-        self.db.refresh(reservation)
+
         return reservation
 
+
+"""
     def approve_reservation(self, reservation_id: int):
         reservation = (
             self.db.query(Reservation)
@@ -129,3 +130,4 @@ class ReservationService:
         self.db.commit()
         self.db.refresh(reservation)
         return reservation
+"""

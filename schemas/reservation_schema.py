@@ -49,3 +49,8 @@ class ReservationRead(BaseModel):
                 obj.booking_slot
             ),  # Convert the single booking_slot to BookingSlotRead
         )
+
+
+class CancelReservationRequest(BaseModel):
+    restaurant_id: int
+    booking_slot_id: int
